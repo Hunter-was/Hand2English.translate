@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Hand ↔ English Translator</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      display: flex;
+      font-family: monospace;
+      color: white;
+    }
+    .side {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background-color: #696969;
+      color: white;
+      cursor: text;
+      display: flex;
+      flex-direction: column;
+    }
+    .side.active {
+      background-color: #AED6CA;
+      color: black;
+    }
+    .header {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    #divider {
+      width: 10px;
+      background-color: black;
+      cursor: pointer;
+    }
+    .content {
+      flex: 1;
+      outline: none;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <!-- Hand side on the LEFT -->
+  <div id="left" class="side">
+    <div class="header">Hand</div>
+    <div id="leftContent" class="content" contenteditable="false"></div>
+  </div>
+  <div id="divider"></div>
+  <!-- English side on the RIGHT -->
+  <div id="right" class="side">
+    <div class="header">English</div>
+    <div id="rightContent" class="content" contenteditable="false"></div>
+  </div>
+
+  <script>
+    const left = document.getElementById('left');
+    const right = document.getElementById('right');
+    const divider = document.getElementById('divider');
+    const leftContent = document.getElementById('leftContent');
+    const rightContent = document.getElementById('rightContent');
+
+    let activeSide = null;
+
+    // Mapping Hand <-> English
+    const handToEnglishMap = {
+      "H":"(end)", "TT":" ", "T":"", ".":".",
+      "M":"A","II":"B","R":"C","RR":"D","MM":"E","III":"F","IM":"G","P":"H","I":"I",
+      "PRM":"J","MMM":"K","RI":"L","IR":"M","PP":"N","PR":"O","PIM":"P","IP":"Q",
+      "MR":"R","MP":"S","PI":"T","PM":"U","RMI":"V","IMP":"W","PRI":"X","MI":"Y","MPI":"Z"
+    };
+
+    const englishToHandMap = {
+      "A":"M","B":"II","C":"R","D":"RR","E":"MM","F":"III","G":"IM","H":"P","I":"I","J":"PRM",
+      "K":"MMM","L":"RI","M":"IR","N":"PP","O":"PR","P":"PIM","Q":"IP","R":"MR","S":"MP","T":"PI",
+      "U":"PM","V":"RMI","W":"IMP","X":"PRI","Y":"MI","Z":"MPI"
+    };
+
+    function handToEnglish(handText) {
+      let output = "";
+      let i = 0;
+      while (i < handText.length) {
+        if (handText.startsWith("TT", i)) {
+          output += " ";
+          i += 2;
+          continue;
+        }
+        if (handText[i] === ".") {
+          output += ".";
+          i++;
+          continue;
+        }
+        if (handText[i] === "H") {
+          output += ".";
+          i++;
+          continue;
+        }
+        let found = null;
+        for (let len = 3; len >= 1; len--) {
+          let seq = handText.substr(i, len);
+          if (handToEnglishMap[seq]) {
+            found = seq;
+            break;
+          }
+        }
+        if (found) {
+          let letter = handToEnglishMap[found];
+          if (letter !== "(end)") output += letter;
+          i += found.length;
+        } else {
+          i++;
+        }
+      }
+      return output.replace(/(^\w|\.\s+\w)/g, c => c.toUpperCase());
+    }
+
+    function englishToHand(engText) {
+      let output = "";
+      let letters = engText.split("");
+      for (let i = 0; i < letters.length; i++) {
+        let ch = letters[i];
+        if (ch === " ") {
+          output += "TT";
+        } else if (ch === ".") {
+          output += "H";
+        } else {
+          let upper = ch.toUpperCase();
+          if (englishToHandMap[upper]) {
+            output += englishToHandMap[upper];
+            // insert T between letters, except last or before space/period
+            if (i < letters.length - 1 && letters[i+1] !== " " && letters[i+1] !== ".") {
+              output += "T";
+            }
+          }
+        }
+      }
+      return output;
+    }
+
+    function setActive(side) {
+      activeSide = side;
+      if (side === 'left') {
+        left.classList.add('active');
+        right.classList.remove('active');
+        leftContent.setAttribute("contenteditable", "true");
+        rightContent.setAttribute("contenteditable", "false");
+        leftContent.focus();
+      } else if (side === 'right') {
+        right.classList.add('active');
+        left.classList.remove('active');
+        rightContent.setAttribute("contenteditable", "true");
+        leftContent.setAttribute("contenteditable", "false");
+        rightContent.focus();
+      } else {
+        // Neutral
+        activeSide = null;
+        left.classList.remove('active');
+        right.classList.remove('active');
+        leftContent.setAttribute("contenteditable", "false");
+        rightContent.setAttribute("contenteditable", "false");
+        window.getSelection().removeAllRanges();
+      }
+    }
+
+    left.addEventListener('click', () => setActive('left'));
+    right.addEventListener('click', () => setActive('right'));
+    divider.addEventListener('click', () => setActive(null));
+
+    // Filter + uppercase on Hand side (LEFT)
+    leftContent.addEventListener('beforeinput', e => {
+      if (activeSide !== 'left') return;
+      if (e.inputType === 'insertText') {
+        const char = e.data;
+        const upper = char.toUpperCase();
+        const allowed = ["T","I","M","R","P","H","."," "];
+        if (!allowed.includes(upper)) {
+          e.preventDefault();
+        } else {
+          e.preventDefault(); // stop default insert
+          document.execCommand("insertText", false, upper);
+        }
+      }
+    });
+
+    // Sync Hand -> English
+    leftContent.addEventListener('input', () => {
+      if (activeSide === 'left') {
+        rightContent.textContent = handToEnglish(leftContent.textContent);
+      }
+    });
+
+    // Sync English -> Hand
+    rightContent.addEventListener('input', () => {
+      if (activeSide === 'right') {
+        leftContent.textContent = englishToHand(rightContent.textContent);
+      }
+    });
+  </script>
+</body>
+</html>
