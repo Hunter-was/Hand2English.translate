@@ -68,7 +68,7 @@
     // Mapping Hand <-> English
     const handToEnglishMap = {
       "H":"(end)", "TT":" ", "T":"", ".":".",
-      "TI":",", "TR":"?", "TM":"!",
+      "HI":",", "HR":"?", "HM":"!",
       "M":"A","II":"B","R":"C","RR":"D","MM":"E","III":"F","IM":"G","P":"H","I":"I",
       "PRM":"J","MMM":"K","RI":"L","IR":"M","PP":"N","PR":"O","PIM":"P","IP":"Q",
       "MR":"R","MP":"S","PI":"T","PM":"U","RMI":"V","IMP":"W","PRI":"X","MI":"Y","MPI":"Z"
@@ -78,7 +78,7 @@
       "A":"M","B":"II","C":"R","D":"RR","E":"MM","F":"III","G":"IM","H":"P","I":"I","J":"PRM",
       "K":"MMM","L":"RI","M":"IR","N":"PP","O":"PR","P":"PIM","Q":"IP","R":"MR","S":"MP","T":"PI",
       "U":"PM","V":"RMI","W":"IMP","X":"PRI","Y":"MI","Z":"MPI",
-      ",":"TI", "?":"TR", "!":"TM" // punctuation mapping
+      ",":"HI", "?":"HR", "!":"HM" // updated punctuation mapping
     };
 
     function handToEnglish(handText) {
@@ -90,17 +90,17 @@
           i += 2;
           continue;
         }
-        if (handText.startsWith("TI", i)) {
+        if (handText.startsWith("HI", i)) {
           output += ",";
           i += 2;
           continue;
         }
-        if (handText.startsWith("TR", i)) {
+        if (handText.startsWith("HR", i)) {
           output += "?";
           i += 2;
           continue;
         }
-        if (handText.startsWith("TM", i)) {
+        if (handText.startsWith("HM", i)) {
           output += "!";
           i += 2;
           continue;
@@ -144,11 +144,11 @@
         } else if (ch === ".") {
           output += "H";
         } else if (ch === ",") {
-          output += "TI";
+          output += "HI";
         } else if (ch === "?") {
-          output += "TR";
+          output += "HR";
         } else if (ch === "!") {
-          output += "TM";
+          output += "HM";
         } else {
           let upper = ch.toUpperCase();
           if (englishToHandMap[upper]) {
