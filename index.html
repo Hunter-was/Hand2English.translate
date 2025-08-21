@@ -68,6 +68,7 @@
     // Mapping Hand <-> English
     const handToEnglishMap = {
       "H":"(end)", "TT":" ", "T":"", ".":".",
+      "TI":",", "TR":"?", "TM":"!",
       "M":"A","II":"B","R":"C","RR":"D","MM":"E","III":"F","IM":"G","P":"H","I":"I",
       "PRM":"J","MMM":"K","RI":"L","IR":"M","PP":"N","PR":"O","PIM":"P","IP":"Q",
       "MR":"R","MP":"S","PI":"T","PM":"U","RMI":"V","IMP":"W","PRI":"X","MI":"Y","MPI":"Z"
@@ -76,7 +77,8 @@
     const englishToHandMap = {
       "A":"M","B":"II","C":"R","D":"RR","E":"MM","F":"III","G":"IM","H":"P","I":"I","J":"PRM",
       "K":"MMM","L":"RI","M":"IR","N":"PP","O":"PR","P":"PIM","Q":"IP","R":"MR","S":"MP","T":"PI",
-      "U":"PM","V":"RMI","W":"IMP","X":"PRI","Y":"MI","Z":"MPI"
+      "U":"PM","V":"RMI","W":"IMP","X":"PRI","Y":"MI","Z":"MPI",
+      ",":"TI", "?":"TR", "!":"TM" // punctuation mapping
     };
 
     function handToEnglish(handText) {
@@ -85,6 +87,21 @@
       while (i < handText.length) {
         if (handText.startsWith("TT", i)) {
           output += " ";
+          i += 2;
+          continue;
+        }
+        if (handText.startsWith("TI", i)) {
+          output += ",";
+          i += 2;
+          continue;
+        }
+        if (handText.startsWith("TR", i)) {
+          output += "?";
+          i += 2;
+          continue;
+        }
+        if (handText.startsWith("TM", i)) {
+          output += "!";
           i += 2;
           continue;
         }
@@ -126,12 +143,18 @@
           output += "TT";
         } else if (ch === ".") {
           output += "H";
+        } else if (ch === ",") {
+          output += "TI";
+        } else if (ch === "?") {
+          output += "TR";
+        } else if (ch === "!") {
+          output += "TM";
         } else {
           let upper = ch.toUpperCase();
           if (englishToHandMap[upper]) {
             output += englishToHandMap[upper];
-            // insert T between letters, except last or before space/period
-            if (i < letters.length - 1 && letters[i+1] !== " " && letters[i+1] !== ".") {
+            // insert T between letters, except last or before space/period/comma/question/exclamation
+            if (i < letters.length - 1 && !" .,?!".includes(letters[i+1])) {
               output += "T";
             }
           }
