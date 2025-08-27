@@ -68,17 +68,19 @@
     // Mapping Hand <-> English
     const handToEnglishMap = {
       "H":"(end)", "TT":" ", "T":"", ".":".",
-      "HI":",", "HR":"?", "HM":"!",
-      "M":"A","I":"B","R":"C","RR":"D","MM":"E","III":"F","IM":"G","P":"H","I":"I",
+      "HI":",", "HR":"?", "HM":"!","TM":"1","TMM":"2","TMMM":"3","TMMMM":"4",
+      "TMMMMM":"5","TMMMMMM":"6","TMMMMMMM":"7","TMMMMMMMM":"8","TMMMMMMMMM":"9","TMI":"0",
+      "HTI":"*","HII":"'","HI":",","HTM":"-","HH":"+","HP":"÷"
+      "M":"A","I":"B","R":"C","RR":"D","MM":"E","III":"F","IM":"G","P":"H","II":"I",
       "PRM":"J","MMM":"K","RI":"L","IR":"M","PP":"N","PR":"O","PIM":"P","IP":"Q",
-      "MR":"R","MP":"S","PI":"T","PM":"U","RMI":"V","IMP":"W","PRI":"X","MI":"Y","MPI":"Z"
+      "MR":"R","MP":"S","PI":"T","PM":"U","RMI":"V","IMP":"W","PRI":"X","MI":"Y","MPI":"Z" // ,"Code":"Letter" ,"C":"L"
     };
 
     const englishToHandMap = {
-      "A":"M","B":"I","C":"R","D":"RR","E":"MM","F":"III","G":"IM","H":"P","I":"I","J":"PRM",
+      "A":"M","B":"I","C":"R","D":"RR","E":"MM","F":"III","G":"IM","H":"P","I":"II","J":"PRM",
       "K":"MMM","L":"RI","M":"IR","N":"PP","O":"PR","P":"PIM","Q":"IP","R":"MR","S":"MP","T":"PI",
       "U":"PM","V":"RMI","W":"IMP","X":"PRI","Y":"MI","Z":"MPI",
-      ",":"HI", "?":"HR", "!":"HM" // updated punctuation mapping
+      ",":"HI", "?":"HR", "!":"HM" // ,"Letter":"Code"
     };
 
     function handToEnglish(handText) {
