@@ -65,62 +65,38 @@
 
     let activeSide = null;
 
-    // Mapping Hand <-> English
+    // Hand → English
     const handToEnglishMap = {
-      "H":"(end)", "TT":" ", "T":"", ".":".",
-      "HI":",", "HR":"?", "HM":"!","TM":"1","TMM":"2","TMMM":"3","TMMMM":"4",
-      "TMMMMM":"5","TMMMMMM":"6","TMMMMMMM":"7","TMMMMMMMM":"8","TMMMMMMMMM":"9","TMI":"0",
-      "HTI":"*","HII":"'","HI":",","HTM":"-","HH":"+","HP":"÷"
+      "TT": " ", "T": "", "H": "(end)", ".": ".",
+      "HI": ",", "HR": "?", "HM": "!",
+      "TM": "1","TMM": "2","TMMM": "3","TMMMM": "4","TMMMMM": "5",
+      "TMMMMMM": "6","TMMMMMMM": "7","TMMMMMMMM": "8","TMMMMMMMMM": "9","TMI": "0",
+      "HTI": "*","HII": "'","HTM": "-","HH": "+","HP": "÷",
       "M":"A","I":"B","R":"C","RR":"D","MM":"E","III":"F","IM":"G","P":"H","II":"I",
       "PRM":"J","MMM":"K","RI":"L","IR":"M","PP":"N","PR":"O","PIM":"P","IP":"Q",
-      "MR":"R","MP":"S","PI":"T","PM":"U","RMI":"V","IMP":"W","PRI":"X","MI":"Y","MPI":"Z" // ,"Code":"Letter" ,"C":"L"
+      "MR":"R","MP":"S","PI":"T","PM":"U","RMI":"V","IMP":"W","PRI":"X","MI":"Y","MPI":"Z"
     };
 
+    // English → Hand
     const englishToHandMap = {
       "A":"M","B":"I","C":"R","D":"RR","E":"MM","F":"III","G":"IM","H":"P","I":"II","J":"PRM",
       "K":"MMM","L":"RI","M":"IR","N":"PP","O":"PR","P":"PIM","Q":"IP","R":"MR","S":"MP","T":"PI",
       "U":"PM","V":"RMI","W":"IMP","X":"PRI","Y":"MI","Z":"MPI",
-      ",":"HI", "?":"HR", "!":"HM" // ,"Letter":"Code"
+      "1":"TM","2":"TMM","3":"TMMM","4":"TMMMM","5":"TMMMMM","6":"TMMMMMM",
+      "7":"TMMMMMMM","8":"TMMMMMMMM","9":"TMMMMMMMMM","0":"TMI",
+      " ":"TT",".":"H",",":"HI","?":"HR","!":"HM","*":"HTI","'":"HII","-":"HTM","+":"HH","÷":"HP"
     };
 
+    // Hand → English
     function handToEnglish(handText) {
       let output = "";
       let i = 0;
       while (i < handText.length) {
-        if (handText.startsWith("TT", i)) {
-          output += " ";
-          i += 2;
-          continue;
-        }
-        if (handText.startsWith("HI", i)) {
-          output += ",";
-          i += 2;
-          continue;
-        }
-        if (handText.startsWith("HR", i)) {
-          output += "?";
-          i += 2;
-          continue;
-        }
-        if (handText.startsWith("HM", i)) {
-          output += "!";
-          i += 2;
-          continue;
-        }
-        if (handText[i] === ".") {
-          output += ".";
-          i++;
-          continue;
-        }
-        if (handText[i] === "H") {
-          output += ".";
-          i++;
-          continue;
-        }
         let found = null;
-        for (let len = 3; len >= 1; len--) {
+        // longest possible match (up to 9 chars: TMMMMMMMMM)
+        for (let len = 9; len >= 1; len--) {
           let seq = handText.substr(i, len);
-          if (handToEnglishMap[seq]) {
+          if (handToEnglishMap[seq] !== undefined) {
             found = seq;
             break;
           }
@@ -130,41 +106,30 @@
           if (letter !== "(end)") output += letter;
           i += found.length;
         } else {
-          i++;
+          i++; // skip unknown
         }
       }
+      // Capitalize first letters after sentence breaks
       return output.replace(/(^\w|\.\s+\w)/g, c => c.toUpperCase());
     }
 
+    // English → Hand
     function englishToHand(engText) {
       let output = "";
-      let letters = engText.split("");
-      for (let i = 0; i < letters.length; i++) {
-        let ch = letters[i];
-        if (ch === " ") {
-          output += "TT";
-        } else if (ch === ".") {
-          output += "H";
-        } else if (ch === ",") {
-          output += "HI";
-        } else if (ch === "?") {
-          output += "HR";
-        } else if (ch === "!") {
-          output += "HM";
-        } else {
-          let upper = ch.toUpperCase();
-          if (englishToHandMap[upper]) {
-            output += englishToHandMap[upper];
-            // insert T between letters, except last or before space/period/comma/question/exclamation
-            if (i < letters.length - 1 && !" .,?!".includes(letters[i+1])) {
-              output += "T";
-            }
+      for (let i = 0; i < engText.length; i++) {
+        let ch = engText[i].toUpperCase();
+        if (englishToHandMap[ch]) {
+          output += englishToHandMap[ch];
+          // insert T between letters (not before punctuation/space)
+          if (i < engText.length - 1 && !" .,?!*-+'÷".includes(engText[i+1])) {
+            output += "T";
           }
         }
       }
       return output;
     }
 
+    // Set active side
     function setActive(side) {
       activeSide = side;
       if (side === 'left') {
@@ -180,7 +145,6 @@
         leftContent.setAttribute("contenteditable", "false");
         rightContent.focus();
       } else {
-        // Neutral
         activeSide = null;
         left.classList.remove('active');
         right.classList.remove('active');
@@ -194,30 +158,29 @@
     right.addEventListener('click', () => setActive('right'));
     divider.addEventListener('click', () => setActive(null));
 
-    // Filter + uppercase on Hand side (LEFT)
+    // Filter input on Hand side
     leftContent.addEventListener('beforeinput', e => {
       if (activeSide !== 'left') return;
       if (e.inputType === 'insertText') {
-        const char = e.data;
-        const upper = char.toUpperCase();
-        const allowed = ["T","I","M","R","P","H","."," "];
-        if (!allowed.includes(upper)) {
+        const char = e.data.toUpperCase();
+        const allowed = ["T","I","M","R","P","H","."];
+        if (!allowed.includes(char)) {
           e.preventDefault();
         } else {
-          e.preventDefault(); // stop default insert
-          document.execCommand("insertText", false, upper);
+          e.preventDefault(); 
+          document.execCommand("insertText", false, char);
         }
       }
     });
 
-    // Sync Hand -> English
+    // Sync Hand → English
     leftContent.addEventListener('input', () => {
       if (activeSide === 'left') {
         rightContent.textContent = handToEnglish(leftContent.textContent);
       }
     });
 
-    // Sync English -> Hand
+    // Sync English → Hand
     rightContent.addEventListener('input', () => {
       if (activeSide === 'right') {
         leftContent.textContent = englishToHand(rightContent.textContent);
